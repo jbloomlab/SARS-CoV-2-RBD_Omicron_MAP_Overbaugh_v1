@@ -1,0 +1,196 @@
+# config for analysis
+
+# conda environment file
+environment: environment.yml
+
+# most CPUs to ever use at once
+max_cpus: 16
+
+# do we get the sequencing data from the 'HutchServer' or 'SRA'?
+seqdata_source: HutchServer
+
+# list of Illumina sequencing runs of barcodes
+barcode_runs_Wuhan_Hu_1: data/barcode_runs_Wuhan_Hu_1.csv
+barcode_runs_Omicron_BA1: data/barcode_runs_Omicron_BA1.csv
+barcode_runs_Omicron_BA2: data/barcode_runs_Omicron_BA2.csv
+
+# table of barcode-variant lookups for different libraries
+bc_variant_lookup_Wuhan_Hu_1: data/codon_variant_table_Wuhan_Hu_1.csv
+bc_variant_lookup_Omicron_BA1: data/codon_variant_table_Omicron_BA1.csv
+bc_variant_lookup_Omicron_BA2: data/codon_variant_table_Omicron_BA2.csv
+
+# sequencing counts to cells ratio should exceed this for escape samples
+min_counts_to_cells_ratio: 2.5
+# sequencing counts should exceed this for reference samples
+reference_min_counts: 2.5e+7
+
+# wildtype sequence of mutagenized gene
+wildtype_sequence_Wuhan_Hu_1: data/wildtype_sequence_Wuhan_Hu_1.fasta
+wildtype_sequence_Omicron_BA1: data/wildtype_sequence_Omicron_BA1.fasta
+wildtype_sequence_Omicron_BA2: data/wildtype_sequence_Omicron_BA2.fasta
+site_number_offset: 330  # add this to sequential sites to get RBD numbering
+
+# URLs from which we download binding & expression of mutants & variants
+mut_bind_expr_url: https://media.githubusercontent.com/media/jbloomlab/SARS-CoV-2-RBD_DMS_Omicron/main/results/final_variant_scores/final_variant_scores.csv
+early2020_mut_bind_expr_url: https://media.githubusercontent.com/media/jbloomlab/SARS-CoV-2-RBD_DMS/master/results/single_mut_effects/single_mut_effects.csv
+
+
+# GISAID mutation counts file
+gisaid_mutation_counts: data/GISAID_mutation_counts.csv
+
+# Parameters for processing Illumina barcodes, assuming this structure:
+#  [R2 binds] - [upstream] - [barcode] - [downstream] - [R1 binds]
+#  This orientation is hard-wired in the barcode parser, but here it is opposite
+#  Therefore, supplied the "downstream" sequence as reverse complemented upstream
+# Passed to `dms_variants.illuminabarcodeparser.IlluminaBarcodeParser`:
+illumina_barcode_parser_params:
+  upstream: GCTCGCGGCCGC
+  downstream: ''
+  minq: 20
+  upstream_mismatch: 1
+  downstream_mismatch: 0
+
+# Input files for analyses from the data subdirectory
+RBD_sites: data/RBD_sites.csv
+
+# Parameters used when computed escape scores:
+escape_score_type: frac_escape  # type of escape score, see dms_variants
+escape_score_pseudocount: 0.5  # added to observed counts
+escape_score_floor_E: 0  # floor on escape fractions
+escape_score_ceil_E: 1  # ceiling on escape fractions
+# Group variants by this when calculating escape scores; sensible values are
+# "barcode" (to calculate a score for each barcoded variant) or
+# "aa_substitutions" (to group all variants with same amino-acid substitutions):
+escape_score_group_by: barcode
+# Filter variants (after grouping according to `escape_group_by`) with
+# pre-selection counts < this quantile of stop codon variants, thereby
+# removing low count "noise":
+escape_score_precount_filter: 100
+# Filter variants with mutation with binding or expression scores
+# <= these values
+escape_score_min_bind_mut_Wuhan_Hu_1: -2.0
+escape_score_min_expr_mut_Wuhan_Hu_1: -1.25
+escape_score_min_bind_mut_Omicron_BA1: -2.0
+escape_score_min_expr_mut_Omicron_BA1: -0.83361
+escape_score_min_bind_mut_Omicron_BA2: -2.0
+escape_score_min_expr_mut_Omicron_BA2: -0.95489
+# should we just exclude all mutations to sites where the WT is a cysteine?
+exclude_cysteines: True
+# Only retain mutation-level escape fraction estimates when there are
+# **either** >= the indicated number of filtered variants (after grouping
+# according to `escape_group_by`) with the mutation as a single mutant
+# or in any context for that library:
+escape_frac_min_single_mut_measurements: 2
+escape_frac_min_any_mut_measurements: 2
+# In order to compute an "average" escape fraction for a mutation, require
+# it to be in at least this many libraries **or** to be observed at
+# least this many total times as a single mutant across all libraries:
+escape_frac_avg_min_libraries: 2
+escape_frac_avg_min_single: 2
+
+# Parameters in escape frac output file that enable dms-view
+# visualization on PDB 6m0j:
+escape_frac_protein_chain: E  # use this chain
+
+
+# Parameters for calling sites of strong escape based on site escape metric.
+# There are several different calling thresholds defined. In order to be called,
+# a site must meet *all* of the site criteria or have a mutation that meets
+# *all* of the mutation criteria.
+strong_escape_sites_calling_params:
+  default:
+    exceed_median: 10  # must exceed median across sites by > this
+    frac_max: 0.1  # must be > this much of max escape site
+    min_value: 0  # site selection must be > than this
+  sensitive:
+    exceed_median: 5  # must exceed median across sites by > this
+    frac_max: 0.05  # must be > this much of max escape site
+    min_value: 0  # must be > than this
+  sensitive_max_mut:
+    exceed_median: 5  # must exceed median across sites by > this
+    frac_max: 0.05  # must be > this much of max escape site
+    min_value: 0  # must be > than this
+    min_value_mut: 0.5  # keep site if any mutation selection > than this
+
+# Site- and mutation-level metrics for escape profiles
+site_metric: site_total_escape_frac_single_mut
+mut_metric: mut_escape_frac_single_mut
+# Specify how to plot escape profiles
+escape_profiles_config_Wuhan_Hu_1: data/escape_profiles_config_Wuhan_Hu_1.yaml
+escape_profiles_config_Omicron_BA1: data/escape_profiles_config_Omicron_BA1.yaml
+escape_profiles_config_Omicron_BA2: data/escape_profiles_config_Omicron_BA2.yaml
+# Site color schemes for escape profiles
+site_color_schemes: data/site_color_schemes.csv
+# Set default y-axis max for escape profiles. The y-axis ymax is
+# scaled to larger of max site escape for antibody / sera **or** so
+# indicated quantile of site escape is at the indicated fraction of y-axis
+# height. It's also possible to set a minimum value for the y-maximum.
+# See: https://jbloomlab.github.io/dmslogo/set_ylims.html. Can be
+# overridden for specific escape profiles in `data/escape_profiles_config.yaml`.
+escape_profile_ymax:
+  quantile: 0.5
+  frac: 0.05
+  min_ymax: null
+
+# structural mappings configuration
+output_pdbs_config: data/output_pdbs_config.yaml
+
+
+# output directories / files
+summary_dir: results/summary
+figs_dir: results/figures
+
+#downloaded prior dms measures
+mut_bind_expr: results/prior_DMS_data/mutant_ACE2binding_expression.csv
+early2020_mut_bind_expr: results/prior_DMS_data/early2020_mutant_ACE2binding_expression.csv
+
+#output dirs and files for current analyses
+counts_dir_Wuhan_Hu_1: results/counts/Wuhan_Hu_1
+counts_dir_Omicron_BA1: results/counts/Omicron_BA1
+counts_dir_Omicron_BA2: results/counts/Omicron_BA2
+
+variant_counts_Wuhan_Hu_1: results/counts/Wuhan_Hu_1/variant_counts.csv.gz
+variant_counts_Omicron_BA1: results/counts/Omicron_BA1/variant_counts.csv.gz
+variant_counts_Omicron_BA2: results/counts/Omicron_BA2/variant_counts.csv.gz
+
+counts_to_cells_csv_Wuhan_Hu_1: results/counts/Wuhan_Hu_1/counts_to_cells_csv.csv
+counts_to_cells_csv_Omicron_BA1: results/counts/Omicron_BA1/counts_to_cells_csv.csv
+counts_to_cells_csv_Omicron_BA2: results/counts/Omicron_BA2/counts_to_cells_csv.csv
+
+escape_scores_dir: results/escape_scores
+
+escape_score_samples_Wuhan_Hu_1: results/escape_scores/samples_Wuhan_Hu_1.csv
+escape_score_samples_Omicron_BA1: results/escape_scores/samples_Omicron_BA1.csv
+escape_score_samples_Omicron_BA2: results/escape_scores/samples_Omicron_BA2.csv
+
+escape_scores_Wuhan_Hu_1: results/escape_scores/scores_Wuhan_Hu_1.csv
+escape_scores_Omicron_BA1: results/escape_scores/scores_Omicron_BA1.csv
+escape_scores_Omicron_BA2: results/escape_scores/scores_Omicron_BA2.csv
+
+escape_fracs_Wuhan_Hu_1: results/escape_scores/escape_fracs_Wuhan_Hu_1.csv
+escape_fracs_Omicron_BA1: results/escape_scores/escape_fracs_Omicron_BA1.csv
+escape_fracs_Omicron_BA2: results/escape_scores/escape_fracs_Omicron_BA2.csv
+
+escape_profiles_dms_colors_Wuhan_Hu_1: results/escape_profiles/Wuhan_Hu_1/escape_profiles_dms_colors.csv
+escape_profiles_dms_colors_Omicron_BA1: results/escape_profiles/Omicron_BA1/escape_profiles_dms_colors.csv
+escape_profiles_dms_colors_Omicron_BA2: results/escape_profiles/Omicron_BA2/escape_profiles_dms_colors.csv
+
+escape_profiles_dir_Wuhan_Hu_1: results/escape_profiles/Wuhan_Hu_1
+escape_profiles_dir_Omicron_BA1: results/escape_profiles/Omicron_BA1
+escape_profiles_dir_Omicron_BA2: results/escape_profiles/Omicron_BA2
+
+strong_escape_sites_Wuhan_Hu_1: results/escape_profiles/strong_escape_sites_Wuhan_Hu_1.csv
+strong_escape_sites_Omicron_BA1: results/escape_profiles/strong_escape_sites_Omicron_BA1.csv
+strong_escape_sites_Omicron_BA2: results/escape_profiles/strong_escape_sites_Omicron_BA2.csv
+
+pdb_outputs_dir_Wuhan_Hu_1: results/pdb_outputs/Wuhan_Hu_1
+pdb_outputs_dir_Omicron_BA1: results/pdb_outputs/Omicron_BA1
+pdb_outputs_dir_Omicron_BA2: results/pdb_outputs/Omicron_BA2
+
+supp_data_dir_Wuhan_Hu_1: results/supp_data/Wuhan_Hu_1
+supp_data_dir_Omicron_BA1: results/supp_data/Omicron_BA1
+supp_data_dir_Omicron_BA2: results/supp_data/Omicron_BA2
+
+bind_expr_filters_dir_Wuhan_Hu_1: results/bind_expr_filters/Wuhan_Hu_1
+bind_expr_filters_dir_Omicron_BA1: results/bind_expr_filters/Omicron_BA1
+bind_expr_filters_dir_Omicron_BA2: results/bind_expr_filters/Omicron_BA2

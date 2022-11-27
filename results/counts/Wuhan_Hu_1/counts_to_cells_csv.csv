@@ -1,0 +1,9 @@
+sample_lib,date,experiment,antibody,concentration,sort_bin,number_cells,counts,counts:cells,is_reference
+"exptREF-none-0-ref, lib12",220816,exptREF,none,0,ref,,3.48e+07,,True
+"exptREF-none-0-ref, lib13",220816,exptREF,none,0,ref,,3.39e+07,,True
+"expt2-268C3-352-abneg, lib12",220816,expt2,268C3,352,abneg,1.95e+05,8.44e+05,4.32,False
+"expt2-268C3-352-abneg, lib13",220816,expt2,268C3,352,abneg,1.99e+05,7.96e+05,4,False
+"expt3-268C13-796-abneg, lib12",220816,expt3,268C13,796,abneg,5.09e+05,2.34e+06,4.59,False
+"expt3-268C13-796-abneg, lib13",220816,expt3,268C13,796,abneg,5.1e+05,2.59e+06,5.07,False
+"expt4-268C61-147-abneg, lib12",220816,expt4,268C61,147,abneg,1.89e+05,6.5e+05,3.44,False
+"expt4-268C61-147-abneg, lib13",220816,expt4,268C61,147,abneg,1.34e+05,5.21e+05,3.9,False
