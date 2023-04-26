@@ -3,6 +3,7 @@
 
 Study and analysis by Tyler Starr, Allie Greaney, [Jesse Bloom](https://research.fhcrc.org/bloom/en.html), and co-authors.
 
+Details can be found in the [preprint](https://www.biorxiv.org/content/10.1101/2022.12.15.520606v2).
 
 ## Summary of workflow and results
 For a summary of the workflow and links to key results files, click [here](results/summary/summary.md).
