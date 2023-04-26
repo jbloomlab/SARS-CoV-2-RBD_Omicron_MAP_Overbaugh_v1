@@ -1,48 +1,121 @@
-# Uploading FASTQ files to the SRA
+# Uploading FASTQ files to the SRA as a new BioSample on an existing BioProject
 
-Details of how the raw sequencing files (FASTQ files) were uploaded to the NIH [Sequence Read Archive](https://www.ncbi.nlm.nih.gov/sra).
-The submitted files are in BioProject [xxx](https://www.ncbi.nlm.nih.gov/bioproject/xxx).
+Here is how to upload FASTQ files to the NCBI [Sequence Read Archive](https://www.ncbi.nlm.nih.gov/sra).
+The files are uploaded to the existing BioProject [PRJNA770094](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA770094), which is set up to store all deep mutational scanning and mutational antigenic profiling experiments that use the SARS-CoV-2 RBD yeast-display mutant libraries described in [Starr et al (2022)](https://www.biorxiv.org/content/10.1101/2022.02.24.481899v1). The Omicron BA.1 RBD library was first described here: https://github.com/jbloomlab/SARS-CoV-2-RBD_DMS_Omicron.
 
-The Python Jupyter notebook [upload_to_SRA.ipynb](upload_to_SRA.ipynb) has instructions and does the uploading.
+These instructions are only for uploading new Illumina barcode sequencing relevant for BioProject PRJNA770094.
+If you are starting a new BioProject, do **not** follow these instructions but instead create an entirely new BioProject and samples in that.
 
-Because the FTP upload takes a while, you may want to run the Jupyter notebook using `slurm` so there is no timeout with::
+For each new deep mutational scanning or mutational antigenic profiling study with these libraries, you can upload the FASTQ files as a new *BioSample*.
+Here are the steps:
 
-    sbatch --wrap="jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=-1 upload_to_SRA.ipynb" --time 2-0
+## Create the BioSample
+Go to the [SRA Submission Portal](https://submit.ncbi.nlm.nih.gov/subs/) and login.
 
+Then under the `Start a new submission` banner, click *BioSample* to create a new *BioSample*.
+You are now on a page that has a blue `New Submission` button, which you should select.
+This will bring you to a page with some Submitter information; check that it is correct and then hit `Continue`.
+You will then be on the `General Information` page.
+Select when to release the submission to the public (generally, immediately is OK).
+Then click that you are uploading a *Single BioSample* and hit `Continue`.
+You will now be at the *Sample Type* page, and you have to select the package that best describes the submission.
+Click *Microbe*--although we are studying a pathogen it's not a direct clinical sample but an experiment using yeast on a pathogen, which is why we choose this sample type.
+Then click `Continue`.
+Now you enter the sample attributes.
+For the sample name, provide a short name that describes the sample, such as `Overbaugh-v1_MAP_barcodes`.
+Also provide the rest of the information:
 
-## Manual entries into the SRA submission portal
+  - Organism: Severe acute respiratory syndrome coronavirus 2
 
-### Step 3: Project info
-**Project title:** Deep mutational scanning of the RBD from SARS-CoV-2 variant lineages using yeast display of barcoded libraries
+  - strain: various
 
-**Public description:** We performed deep mutational scanning of the SARS-CoV-2 spike receptor-binding domain (RBD) from variant viral lineages using yeast display to measure the effects of all amino-acid mutations on various phenotypes, such as on binding of antibodies or polyclonal plasmas.
+  - isolation source: plasmid
 
-### Step 4: Biosample type
-**NCBI packages:** Microbe
+  - collection date: 2022
 
-### Step 5: Biosample attributes
-Note: BioSamples must have unique attributes, excluding title, sample_name, description, and accession. So I had to create a new column, that I called `sequencing platform` to distinguish the two BioSamples I wanted to upload.
+  - geographic location: USA
 
-**PacBio samples**
-* sample_name: PacBio_CCSs
-* sample_title: PacBio CCSs linking variants to barcodes for SARS-CoV-2 B.1.351 RBD deep mutational scanning
-* organism: Severe acute respiratory syndrome coronavirus 2
-* strain: B.1.351
-* isolation_source: plasmid
-* collection_date: 2021
-* geo_loc_name: USA
-* sample_type: plasmid
-* description: long-read PacBio CCSs linking variants to barcodes for SARS-CoV-2 B.1.351 RBD deep mutational scanning
-* sequencing platform: PACBIO_SMRT
+  - sample type: plasmid
 
-**Illumina barcode sequencing samples**
-* sample_name: B1351_plasma_escape_barcodes		
-* sample_title: Illumina barcode sequencing for B.1.351 mutational antigenic profiling
-* organism: Severe acute respiratory syndrome coronavirus 2
-* strain: B.1.351
-* isolation_source: plasmid
-* collection_date: 2021
-* geo_loc_name: USA
-* sample_type: plasmid
-* description: Illumina barcode sequencing for B.1.351 mutational antigenic profiling
-* sequencing platform: ILLUMINA
+Then hit `Continue`.
+You will now be on the page to specify the BioProject.
+We are adding to an existing BioProject, so enter [PRJNA770094](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA770094) as the *Existing BioProject* and hit `Continue`.
+Finally, add a sample title, such as "Illumina barcode sequencing from mutational antigenic profiling of C68 donor mAbs, v1"
+Then hit `Continue`, make sure everything looks correct, then hit `Submit`.
+
+After a brief bit of processing, the *BioSample* submission should show up, along with a sample accession : *SAMN34381850*
+Add this sample accession to [upload_config.yaml](upload_config.yaml) as the value for the *biosample_accession* key.
+
+## Upload the sequencing data
+Again go to the [SRA Submission Portal](https://submit.ncbi.nlm.nih.gov/subs/) and login.
+This time, under the `Start a new submission` banner, click *Sequence Read Archive* to upload the actual sequencing data.
+
+You are now on a page with a `New submission` button, which you should click.
+Check that the submitter information is correct, then click `Continue`.
+You will now be at the *General Information* page.
+We are adding to an existing BioProject, so enter [PRJNA770094](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA770094) as the *Existing BioProject*.
+Then for the question of whether you already registered a *BioSample*, also select yes.
+Then select a *Release Date* depending on whether you want to release the results immediately (usually fine) or at some future date.
+Then click `Continue`.
+
+You will now be at a page that asks how you want to provide the SRA Metadata.
+Click to *Upload a file*.
+The next section describes how to create this table.
+
+## Create SRA metadata submission table
+In order to create the submission table, you need to specify which Illumina barcode runs we are uploading and what the sample name should be.
+This can be done by editing the [upload_config.yaml](upload_config.yaml) file.
+This YAML has two entries:
+
+ - The `barcode_runs` file, which is a CSV in the format of the repo's master barcode run file at [../data/barcode_runs.csv](../data/barcode_runs.csv). But importantly, this file should **only** have the barcode runs for the samples of interest for this *BioSample*. That might be the main [../data/barcode_runs.csv](../data/barcode_runs.csv) file for the whole repo. Otherwise you want to create a CSV file that just holds the barcode runs of interest and put the path to that.
+
+ - The `sample_name` which should be a concise description (no spaces) for the *BioSample*. This should be the same name used when creating the *BioSample* above.
+
+After configuring [upload_config.yaml](upload_config.yaml), simply run the Jupyter notebook [create_submission_sheet.ipynb](create_submission_sheet.ipynb), which will create two output files:
+
+  - [SRA_submission_spreedsheet.tsv](SRA_submission_spreedsheet.tsv) which is for uploading to the SRA.
+
+  - [FASTQs_to_upload.csv](FASTQs_to_upload.csv), which lists all the FASTQs that need to be uploaded.
+
+## Upload the submission table
+Now return to the [SRA Submission Portal](https://submit.ncbi.nlm.nih.gov/subs/sra/) webpage, and if needed navigate back to your submission.
+You should still be at the `BioSample Attributes` step, and see a `Choose file` box to upload your BioSample attributes.
+Use this click box to upload the [SRA_submission_spreedsheet.tsv](SRA_submission_spreedsheet.tsv) file that you just created in the step above.
+Then click `Continue`.
+
+After a little while, you should now get a page that asks you how you want to upload the files for this submission.
+Click the option for *FTP or Aspera Command Line file preload*.
+
+If you click on the `+` FTP upload instructions, you will see details.
+Add the `Username` and `account folder` provided in these instructions to [upload_config.yaml](upload_config.yaml) as the values for the *ftp_username* and *ftp_account_folder* keys.
+Also add a value for the *ftp_subfolder* that is meaningful for this particular submission
+Finally, put the FTP password as plain text in a file called `ftp_password.txt` which is **not** tracked in this repo for privacy.
+
+## Upload the sequencing data
+Now we need to upload the actual sequencing data.
+This is done by the Jupyter notebook [make_and_upload_tar.ipynb](make_and_upload_tar.ipynb).
+This notebook should run completely without error if you have set the [upload_config.yaml](upload_config.yaml) and `ftp_password.txt` files properly as described above.
+It first creates a very large `*.tar` file called `SRA_submission.tar` that contains all the FASTQs.
+It then uses FTP to upload them to the SRA.
+You can run the notebook interactively, but it will take a little while so make sure it doesn't time out.
+If you want to instead submit it via `slurm`, do this with:
+
+    sbatch --wrap="jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=-1 make_and_upload_tar.ipynb" --time 2-0
+
+After you have finished running [make_and_upload_tar.ipynb](make_and_upload_tar.ipynb), check carefully to make sure the FTP upload was completed.
+If needed, you can manually log into the FTP site to see the file and use `ls` to see the size of what has been transferred.
+
+Finally, return to the SRA submission webpage for the reads, and check the blue `Select preload folder` box.
+Note that you need to wait about 10 minutes for the pre-load folder to become visible.
+The click to select the folder you created (this is the *ftp_subfolder* defined in [upload_config.yaml](upload_config.yaml)) and click *Use selected folder*.
+Finally, check `Autofinish submission` box and hit `Continue`.
+You will get a warning that files are missing since you uploaded a `*.tar` archive; do **not** worry about this and just click `Continue` again.
+The webpage will then indicate it is extracting files from the `*.tar`, so wait for this to finish.
+It should then show that your submission is complete and just waiting for processing.
+
+You then probably want to delete the `SRA_submission.tar` file as it is very large.
+
+## Note for after the paper is published
+After a paper is published, you should update the metadata description to link to the publication.
+To do this, login to the [SRA Submission Portal](https://submit.ncbi.nlm.nih.gov/subs/sra/) and click the `Manage data` button for BioProject [PRJNA770094](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA770094) and there will be options where you can add *Publications* as well as update the project's free-form description text if needed.
+Also be sure that any relevant NIH grants are added.
